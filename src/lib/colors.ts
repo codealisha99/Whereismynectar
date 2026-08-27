@@ -1,8 +1,7 @@
 export const PIN_COLORS = [
-  "#fdf6b2",
-  "#fbcfe8",
-  "#bbf7d0",
-  "#bfdbfe",
-  "#ddd6fe",
-  "#fed7aa",
+  "#efe4a4",
+  "#d3e6c8",
+  "#c9dcea",
+  "#efcfd8",
+  "#d8d0ea",
 ] as const;

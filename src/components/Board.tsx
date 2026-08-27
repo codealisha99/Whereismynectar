@@ -14,12 +14,25 @@ const POLL_MS = 4000;
 const BOARD_W = 3200;
 const BOARD_H = 2200;
 
-function rotationFor(id: string): number {
+function hashId(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   }
-  return ((hash % 9) - 4) * 0.6;
+  return hash;
+}
+
+function rotationFor(id: string): number {
+  return ((hashId(id) % 21) - 10) * 0.2;
+}
+
+function paperRadii(id: string): string {
+  const h = hashId(id);
+  const a = 2 + (h % 4);
+  const b = 4 + ((h >> 3) % 5);
+  const c = 2 + ((h >> 6) % 4);
+  const d = 3 + ((h >> 9) % 4);
+  return `${a}px ${b}px ${c}px ${d}px / ${d}px ${a}px ${b}px ${c}px`;
 }
 
 export default function Board() {
@@ -82,8 +95,8 @@ export default function Board() {
       const board = boardRef.current;
       if (!drag || !board || drag.id !== pin.id) return;
       const rect = board.getBoundingClientRect();
-      const x = Math.min(Math.max(e.clientX - rect.left - drag.offsetX, 8), BOARD_W - 240);
-      const y = Math.min(Math.max(e.clientY - rect.top - drag.offsetY, 8), BOARD_H - 120);
+      const x = Math.min(Math.max(e.clientX - rect.left - drag.offsetX, 8), BOARD_W - 270);
+      const y = Math.min(Math.max(e.clientY - rect.top - drag.offsetY, 8), BOARD_H - 160);
       setPins((prev) =>
         prev.map((p) =>
           p.id === pin.id ? { ...p, x: Math.round(x), y: Math.round(y) } : p,
@@ -197,10 +210,10 @@ export default function Board() {
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-auto bg-[#f5f1e8]">
+    <div className="fixed inset-0 overflow-auto bg-[#2b4e3f]">
       <div
         ref={boardRef}
-        className="board-dots relative"
+        className="board-grid relative"
         style={{ width: BOARD_W, height: BOARD_H }}
       >
         {pins.map((pin, index) => {
@@ -210,14 +223,17 @@ export default function Board() {
           return (
             <div
               key={pin.id}
-              className={`group absolute w-56 touch-none select-none rounded-lg p-3 transition-shadow ${
-                isDragging ? "shadow-2xl" : "shadow-md hover:shadow-lg"
-              }`}
+              title={new Date(pin.createdAt).toLocaleString()}
+              className={`sticky-pin group absolute touch-none select-none ${
+                pin.type === "photo" ? "sticky-pin--photo" : ""
+              } ${isDragging || isEditing ? "sticky-pin--lifted" : ""}`}
               style={{
                 left: pin.x,
                 top: pin.y,
-                backgroundColor: pin.type === "photo" ? "#ffffff" : pin.color,
-                transform: `rotate(${isDragging ? 0 : rotation}deg)`,
+                backgroundColor: pin.color,
+                borderRadius: paperRadii(pin.id),
+                ["--pin-rot" as string]:
+                  isDragging || isEditing ? "0deg" : `${rotation}deg`,
                 zIndex: isDragging ? 1000 : index + 1,
               }}
               onPointerDown={(e) => startDrag(pin, e)}
@@ -225,13 +241,13 @@ export default function Board() {
               onPointerUp={() => endDrag(pin)}
               onDoubleClick={() => beginEdit(pin)}
             >
-              <div className="absolute -top-2 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="absolute -top-2 right-1 z-10 flex gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                 {pin.type === "text" && (
                   <button
                     type="button"
                     title="Change colour"
                     onClick={() => cycleColor(pin)}
-                    className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] shadow ring-1 ring-black/10"
+                    className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] shadow-sm ring-1 ring-black/10"
                   >
                     ◑
                   </button>
@@ -240,7 +256,7 @@ export default function Board() {
                   type="button"
                   title="Delete pin"
                   onClick={() => removePin(pin.id)}
-                  className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] text-stone-500 shadow ring-1 ring-black/10 hover:text-red-600"
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] text-stone-500 shadow-sm ring-1 ring-black/10 hover:text-red-600"
                 >
                   ✕
                 </button>
@@ -253,7 +269,7 @@ export default function Board() {
                     src={`/api/media/${pin.media}`}
                     alt={pin.content || "Pinned photo"}
                     draggable={false}
-                    className="mb-2 max-h-48 w-full rounded-md object-cover"
+                    className="mb-1.5 max-h-28 w-full rounded-[2px] object-cover"
                   />
                 </a>
               )}
@@ -271,14 +287,14 @@ export default function Board() {
                   placeholder={
                     pin.type === "photo" ? "Add a caption…" : "Write something…"
                   }
-                  className={`w-full resize-none rounded bg-white/60 p-1 leading-snug outline-none ring-2 ring-stone-400 ${
-                    pin.type === "photo" ? "h-16 text-sm" : "h-32"
-                  }`}
+                  className="h-10 w-full resize-none bg-transparent px-0.5 py-0 text-[13px] leading-snug text-stone-800 outline-none"
                 />
               ) : (
                 <p
-                  className={`cursor-text break-words whitespace-pre-wrap leading-snug ${
-                    pin.type === "photo" ? "min-h-4 text-sm text-stone-700" : "min-h-24"
+                  className={`cursor-text px-0.5 text-[13px] leading-snug text-stone-800 ${
+                    pin.type === "photo"
+                      ? "line-clamp-1"
+                      : "line-clamp-2 text-center"
                   } ${!pin.content ? "italic text-stone-500/70" : ""}`}
                 >
                   {pin.content ||
@@ -286,17 +302,18 @@ export default function Board() {
                 </p>
               )}
 
-              <div className="mt-1 flex items-center justify-between text-[10px] uppercase tracking-wide text-black/35">
-                <span>{new Date(pin.createdAt).toLocaleDateString()}</span>
-                {pin.source === "whatsapp" && <span>via WhatsApp</span>}
-              </div>
+              {pin.source === "whatsapp" && (
+                <span className="mt-0.5 block text-center text-[9px] tracking-wide text-stone-500/70">
+                  via WhatsApp
+                </span>
+              )}
             </div>
           );
         })}
       </div>
 
       <header className="pointer-events-none fixed inset-x-0 top-0 z-[2000] flex items-start justify-between gap-3 px-4 py-3">
-        <h1 className="pointer-events-auto rounded-full bg-white/85 px-4 py-2 text-sm font-semibold tracking-tight text-stone-800 shadow backdrop-blur">
+        <h1 className="pointer-events-auto rounded-full bg-black/35 px-4 py-2 text-sm font-semibold tracking-tight text-stone-100 shadow-sm backdrop-blur border border-white/10">
           Softboard
         </h1>
         <div className="pointer-events-auto flex gap-2">
@@ -304,7 +321,7 @@ export default function Board() {
             type="button"
             onClick={addNote}
             disabled={busy}
-            className="rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-stone-700 disabled:opacity-50"
+            className="rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-stone-900 shadow transition hover:bg-white disabled:opacity-50"
           >
             + Note
           </button>
@@ -312,7 +329,7 @@ export default function Board() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={busy}
-            className="rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-stone-800 shadow backdrop-blur transition hover:bg-white disabled:opacity-50"
+            className="rounded-full bg-black/35 px-4 py-2 text-sm font-medium text-stone-100 shadow backdrop-blur border border-white/10 transition hover:bg-black/50 disabled:opacity-50"
           >
             + Photo
           </button>
@@ -331,9 +348,9 @@ export default function Board() {
 
       {loaded && pins.length === 0 && (
         <div className="pointer-events-none fixed inset-0 z-[1500] flex items-center justify-center">
-          <div className="max-w-sm rounded-2xl bg-white/85 p-8 text-center shadow backdrop-blur">
-            <p className="text-base font-medium text-stone-800">Your softboard is empty</p>
-            <p className="mt-2 text-sm leading-relaxed text-stone-500">
+          <div className="max-w-sm rounded-2xl bg-black/40 p-8 text-center shadow-xl backdrop-blur border border-white/15">
+            <p className="text-base font-medium text-stone-100">Your softboard is empty</p>
+            <p className="mt-2 text-sm leading-relaxed text-stone-300">
               Add a note or photo above — or send a WhatsApp message to your bot
               number and it will show up here automatically.
             </p>
@@ -342,7 +359,7 @@ export default function Board() {
       )}
 
       <footer className="pointer-events-none fixed inset-x-0 bottom-3 z-[2000] flex justify-center">
-        <span className="rounded-full bg-white/80 px-4 py-1.5 text-xs text-stone-500 shadow backdrop-blur">
+        <span className="rounded-full bg-black/35 px-4 py-1.5 text-xs text-stone-300 shadow backdrop-blur border border-white/10">
           Drag to move · Double-click to edit · Messages sent to your WhatsApp bot land here
         </span>
       </footer>
