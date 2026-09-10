@@ -1,4 +1,5 @@
 import { deletePin, updatePin } from "@/lib/store";
+import type { StickyNoteData, UpdatePinInput } from "@/lib/types";
 
 interface CtxParams {
   params: Promise<{ id: string }>;
@@ -11,6 +12,8 @@ export async function PATCH(request: Request, { params }: CtxParams) {
     y?: unknown;
     content?: unknown;
     color?: unknown;
+    media?: unknown;
+    sticky?: unknown;
   };
   try {
     body = await request.json();
@@ -18,8 +21,8 @@ export async function PATCH(request: Request, { params }: CtxParams) {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const patch: { x?: number; y?: number; content?: string; color?: string } =
-    {};
+  const patch: UpdatePinInput = {};
+
   if (typeof body.x === "number" && Number.isFinite(body.x)) {
     patch.x = Math.max(0, Math.round(body.x));
   }
@@ -27,10 +30,16 @@ export async function PATCH(request: Request, { params }: CtxParams) {
     patch.y = Math.max(0, Math.round(body.y));
   }
   if (typeof body.content === "string") {
-    patch.content = body.content.slice(0, 4000);
+    patch.content = body.content.slice(0, 10000);
   }
   if (typeof body.color === "string" && /^#[0-9a-fA-F]{6}$/.test(body.color)) {
     patch.color = body.color;
+  }
+  if (typeof body.media === "string" || body.media === null) {
+    patch.media = body.media ? body.media : undefined;
+  }
+  if (body.sticky && typeof body.sticky === "object") {
+    patch.sticky = body.sticky as StickyNoteData;
   }
 
   const pin = await updatePin(id, patch);

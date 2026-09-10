@@ -48,6 +48,30 @@ body {
   justify-content: flex-start;
 }
 
+.sticky-pin--study {
+  width: clamp(18rem, 26vw, 23rem);
+  height: auto;
+  min-height: clamp(13rem, 19vw, 17.5rem);
+  padding: 0.5rem;
+  justify-content: flex-start;
+}
+
+.sticky-pin--personal {
+  width: clamp(14rem, 19vw, 17rem);
+  height: auto;
+  min-height: clamp(9.5rem, 13vw, 12.5rem);
+  padding: 0.5rem;
+  justify-content: flex-start;
+}
+
+.sticky-pin--web {
+  width: clamp(15.5rem, 22vw, 19.5rem);
+  height: auto;
+  min-height: clamp(11rem, 15vw, 14rem);
+  padding: 0.5rem;
+  justify-content: flex-start;
+}
+
 .sticky-pin:hover {
   transform: rotate(0deg) translateY(-2px);
   box-shadow:
@@ -65,12 +89,8 @@ body {
 }
 
 @media (min-width: 768px) {
-  .sticky-pin {
+  .sticky-pin:not(.sticky-pin--study):not(.sticky-pin--personal):not(.sticky-pin--web):not(.sticky-pin--photo) {
     width: clamp(12.5rem, 16vw, 16.25rem);
     height: clamp(3.6rem, 5.5vw, 5rem);
-  }
-
-  .sticky-pin--photo {
-    height: auto;
   }
 }
