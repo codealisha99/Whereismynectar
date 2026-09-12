@@ -5,19 +5,24 @@
   --font-mono: var(--font-geist-mono);
 }
 
+:root {
+  --board-bg: #3d5c4a;
+}
+
 body {
-  background: #2b4e3f;
+  background: var(--board-bg);
   color: #292524;
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
 .board-grid,
 .board-dots {
-  background-color: #2b4e3f;
+  background-color: var(--board-bg);
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.09) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
-  background-size: 28px 28px;
+    radial-gradient(rgba(255, 255, 255, 0.06) 0.7px, transparent 0.8px),
+    linear-gradient(to right, rgba(0, 0, 0, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
+  background-size: 5px 5px, 32px 32px, 32px 32px;
 }
 
 .sticky-pin {

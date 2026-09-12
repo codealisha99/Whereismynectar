@@ -312,7 +312,7 @@ export default function Board() {
   }, [pins, filterType]);
 
   return (
-    <div className="fixed inset-0 overflow-auto bg-[#2b4e3f]">
+    <div className="fixed inset-0 overflow-auto bg-[var(--board-bg)]">
       {/* Softboard Canvas */}
       <div
         ref={boardRef}
